@@ -1,0 +1,35 @@
+# Build directories
+**/build/
+build/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Executables and object files
+*.o
+*.obj
+*.out
+*.exe
+*.a
+*.so
+*.dll
+
+# VS Code configuration
+.vscode/
+
+# Temporary or backup files
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+
+# macOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+desktop.ini
