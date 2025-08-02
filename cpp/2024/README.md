@@ -19,7 +19,7 @@ Solutions written in modern C++ (C++20), using `std::ranges`, functional style, 
 
 | Day     | Part 1 Time (ms) | Part 2 Time (ms) |
 |---------|------------------|------------------|
-| Day 01  | 3.383            | 3.479            |
+| Day 01  | 3.038            | 43.754           |
 | Day 02  | ...              | ...              |
 
 > Benchmarks measured using `std::chrono::high_resolution_clock`.
