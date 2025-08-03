@@ -1,4 +1,4 @@
-# Advent of Code 2025
+# Advent of Code 2015
 
 Solutions written in modern C++ (C++20), using `std::ranges`, functional style, and precise benchmarking.
 
