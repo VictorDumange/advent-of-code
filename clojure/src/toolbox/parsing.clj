@@ -16,3 +16,16 @@
 
 (defn digit [c]
   (Character/digit c 10))
+
+(defn trim [line]
+  (str/trim line))
+
+(defn- reversed-digits-iter [nb output]
+  (if (= 0 nb)
+    output
+    (recur (quot nb 10) (conj output (rem nb 10)))))
+
+(defn digits [nb]
+  (if (= 0 nb)
+    [0]
+    (reverse (reversed-digits-iter nb []))))
