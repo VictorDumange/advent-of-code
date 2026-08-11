@@ -1,5 +1,6 @@
 (ns year2025.day05
-  (:require [toolbox.parsing :as parsing]))
+  (:require [toolbox.parsing :as parsing]
+            [toolbox.intervals :as intervals]))
 
 (defn parse-id-range [line]
   (let [parsed (map 
@@ -46,8 +47,33 @@
    (:available-ids database)
    ))
 
-(defn count-fresh [database]
+;; count the number of available ingredients
+;; that are fresh
+(defn count-available-fresh [database]
   (count (get-fresh database)))
 
 (defn part-1 [input]
-  (count-fresh (parse-database input)))
+  (count-available-fresh (parse-database input)))
+
+(defn extract-ranges [input]
+  (parse-id-ranges 
+   (:fresh-table (database-tables input))))
+
+(defn merge-overlapping [input]
+  (intervals/merge input))
+
+;; TO DO : put into toolbox.intervals
+(defn range-size [id-range]
+  (inc (- (:end id-range) (:begin id-range))))
+
+;; count the number of ingredients
+;; that can be fresh
+(defn count-possibly-fresh [id-ranges]
+  (reduce 
+   +
+   (map 
+    range-size 
+    (merge-overlapping id-ranges))))
+
+(defn part-2 [input]
+  (count-possibly-fresh (extract-ranges input)))
