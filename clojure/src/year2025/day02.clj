@@ -30,22 +30,8 @@
     (inc (:last-id id-range)))
    ))
 
-(defn count-invalid [id-range]
-  (reduce
-   (fn [acc id]
-     (if (is-invalid? (str id))
-       (inc acc)
-       acc))
-   0
-   (range
-    (:first-id id-range)
-    (inc (:last-id id-range)))))
-
 (defn sum [seq]
   (reduce + 0 seq))
-
-(defn count-invalid-ranges [ranges]
-  (sum (map count-invalid ranges)))
 
 (defn add-invalid-ids [ranges]
   (sum (flatten (map extract-invalid-ids ranges))))
@@ -58,6 +44,16 @@
  defn parse-ranges [input]
   (map parse-range
        (str/split input #",")))
+
+(defn sliding-window [seq]
+  (partition 2 1 seq))
+
+(defn is-sorted? [seq]
+  (every? 
+   (fn [[a b]]
+     (<= a b)) 
+   (sliding-window seq)
+   ))
 
 (defn part-1 [input]
   (add-invalid-ids (parse-ranges input)))
