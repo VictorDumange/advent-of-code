@@ -25,7 +25,7 @@
         node
         (let [queue (pop queue)
               nodes (next-nodes context node neighbors seen)]
-          (bfs-iter
+          (recur
            context
            (enqueue-all queue nodes)
            (mark-seen seen nodes)

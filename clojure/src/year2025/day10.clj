@@ -30,11 +30,15 @@
 (defn parse-indicator [inner]
   (to-bits (on-indexes inner) (count inner)))
 
-(defn extract-button-indexes [inner]
-  (map parsing/parse-int (parsing/split inner #",")))
+(defn extract-values [expr]
+ (let [splitted (-> expr inner-expr (parsing/split #","))]
+   (map parsing/parse-int splitted)))
+
+(defn extract-button-indexes [expr]
+  (extract-values expr))
 
 (defn parse-wiring-schematic [parenthese indicator-size]
-  (let [inner (-> parenthese inner-expr extract-button-indexes)]
+  (let [inner (extract-button-indexes parenthese)]
     (to-bits inner indicator-size)))
 
 (defn parse-wiring-schematics [parentheses indicator-size]
@@ -74,9 +78,69 @@
                goal?))]
     (graph/path-length path)))
 
+(defn initial-counters [machine]
+  (vec (repeat (count (:joltage machine)) 0)))
+
+(defn press-button-joltage [counters button]
+  (reduce
+   (fn [counters index]
+     (update counters index inc))
+   counters
+   button))
+
+(defn adjacent-counters [machine counters]
+  (map 
+   (fn [button] (press-button-joltage counters button))
+   (:buttons machine)))
+
+(defn valid-counters? [machine counters]
+  (every?
+   (fn [[counter target]]
+     (<= counter target))
+   (map vector counters (:joltage machine))))
+
+(defn neighbors-counters [machine current-counters]
+  (filter 
+   (fn [counters] (valid-counters? machine counters))
+   (adjacent-counters machine current-counters)))
+
+(defn joltage-configured? [machine counters]
+  (= (:joltage machine) counters))
+
+(defn fewest-joltage-presses [machine]
+  (let [path (graph/path (graph/bfs
+                          machine 
+                          (initial-counters machine) 
+                          neighbors-counters
+                          joltage-configured?
+                          ))]
+    (graph/path-length path)))
+
+(defn parse-joltage [rhs]
+  (extract-values rhs))
+
+(defn parse-button [parenthese]
+  (extract-values parenthese))
+
+(defn parse-buttons [parentheses]
+  (map parse-button parentheses))
+
+(defn parse-joltage-machine [line]
+  (let [splitted (parsing/split line #" ")
+        joltage (parse-joltage (last splitted))
+        buttons (parse-buttons (rest (butlast splitted)))]
+    {:buttons buttons :joltage joltage}))
+
+(defn parse-joltage-machines [input]
+  (map parse-joltage-machine (parsing/parse-lines input)))
+
 (defn part-1 [input]
   (let [machines (parse-machines input)]
     (reduce + (map fewest-presses machines))))
+
+(defn part-2 [input]
+    (let [machines (parse-joltage-machines input)]
+    (reduce + (map fewest-joltage-presses machines))))
 
 
 
