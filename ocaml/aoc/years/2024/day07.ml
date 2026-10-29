@@ -31,35 +31,24 @@ let parse_equations (input : string) =
     (fun l -> parse_equation l)
     lines
 
-let rec is_possible (acc : int) (target : int) (operands : int list) (operators : operator list) = 
-  match operands with 
-    | (head :: tail) -> 
-      List.fold_left 
-        (fun res op -> 
-          res || 
-          is_possible (op acc head) target tail operators)
-        false
-        operators
-    | [] -> acc == target
-
 let is_possible (eq : equation) (operators : operator list) = 
   
   let head = List.hd eq.operands in
   let operands = List.tl eq.operands in
 
-  let rec is_possible (acc : int) (operands : int list) (operators : operator list) = 
+  let rec is_possible (acc : int) (operands : int list) = 
     match operands with 
       | (head :: tail) -> 
         List.fold_left 
           (fun res op -> 
             res || 
-            is_possible (op acc head) tail operators)
+            is_possible (op acc head) tail)
           false
           operators
       | [] -> acc == eq.target
   in
 
-  is_possible head operands operators
+  is_possible head operands
 
 let total_calibration_result (equations : equation list) (operators : operator list) =
   List.fold_left
