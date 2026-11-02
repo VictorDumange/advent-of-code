@@ -180,5 +180,71 @@ let fewest_tokens (machines : claw_machine list) =
     0
     machines
 
+
+type linear_equation_system = {
+  a1 : int;
+  b1 : int; 
+  
+  a2: int;
+  b2: int;
+
+  c1 : int;
+  c2 : int;
+}
+
+let determinant (eq: linear_equation_system) =
+  eq.a1 * eq.b2 - eq.a2 * eq.b1
+
+let solve (eq: linear_equation_system) =
+  let d = determinant eq in
+  if d != 0 then
+    (*R2 case*)
+    let xd = eq.c1 * eq.b2 - eq.c2 * eq.b1 in
+    let yd = eq.a1 * eq.c2 - eq.a2 * eq.c1 in
+
+    if ((xd mod d = 0) && (yd mod d = 0)) then
+      Some((xd / d, yd /d))
+    else 
+      None 
+  else
+    failwith("diophantine not implemented")
+
+
+let parse_eq (machine: claw_machine) =
+  {
+    a1 = machine.button_a.x;
+    b1 = machine.button_b.x;
+
+    a2 = machine.button_a.y;
+    b2 = machine.button_b.y;
+
+    c1 = machine.prize.x;
+    c2 = machine.prize.y;
+  }
+
+let nb_tokens machines = 
+  List.fold_left
+    (fun tokens machine -> tokens +
+      match solve (parse_eq machine) with
+        | Some (x, y) -> x * 3 + y
+        | None -> 0
+    )
+    0
+    machines
+
 let part1 (input: string) =
-  fewest_tokens (parse_machines input)
+  let machines = parse_machines input in
+  nb_tokens machines
+
+let update_prize (machine : claw_machine) =
+  let prize = machine.prize in
+  let updated_prize: prize = {x = prize.x + 10000000000000; y = prize.y + 10000000000000} in
+  {machine with prize = updated_prize}
+
+let part2 (input: string) =
+  let machines = input
+    |> parse_machines
+    |> List.map update_prize
+  in
+  
+  nb_tokens machines
