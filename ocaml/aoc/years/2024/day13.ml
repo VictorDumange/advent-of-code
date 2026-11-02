@@ -75,112 +75,6 @@ let parse_machines input =
     |> Parsing.split "\n\n"
     |> List.map parse_claw_machine
 
-type pos = {
-  x : int;
-  y : int;
-}
-
-module Pos = struct
-  type t = pos  
-
-  let compare a b = 
-    match Int.compare a.x b.x with 
-      | 0 -> Int.compare a.y b.y 
-      | c -> c
-end
-
-type state = {
-  pos : pos;
-  tokens : int
-}
-
-module State = struct
-  type t = state
-
-  let compare a b = 
-    match Int.compare a.tokens b.tokens with
-    | 0 -> Pos.compare a.pos b.pos
-    | c -> c
-end
-
-module StateQueue = Pqueue.Make (State)
-
-module Scores = Map.Make (Pos)
-
-let tokens (machine : claw_machine) =
-
-  let next_states (state : state) = 
-    [
-      {
-        pos = 
-          {
-            x = state.pos.x + machine.button_a.x; 
-            y = state.pos.y + machine.button_a.y
-          } ; 
-        tokens = state.tokens + 3
-      };
-      {
-        pos =
-          {
-            x = state.pos.x + machine.button_b.x; 
-            y = state.pos.y + machine.button_b.y
-          };
-        tokens = state.tokens + 1
-      }
-    ] 
-  in
-
-  let is_state_valid (state : state) =
-    (state.pos.x <= machine.prize.x) &&
-    (state.pos.y <= machine.prize.y)
-  in
-
-  let rec tokens (pqueue : StateQueue.t) (scores : int Scores.t) =
-    match StateQueue.find_min pqueue with
-      | None -> scores
-      | Some (current_state) ->
-        let dequeued = StateQueue.remove_min pqueue in
-        let next_states = current_state
-          |> next_states
-          |> List.filter is_state_valid in
-        let updated_queue, updated_scores = List.fold_left
-          (fun (queue, it_score) state -> 
-            match Scores.find_opt state.pos it_score with 
-            | None -> (StateQueue.insert state queue, Scores.add state.pos state.tokens it_score) 
-            | Some (registered_score) -> 
-                if (state.tokens < registered_score) then
-                  (StateQueue.insert state queue, Scores.add state.pos state.tokens it_score)
-                else 
-                  (queue, it_score)
-          )
-          (dequeued, scores)
-          next_states
-        in
-        tokens updated_queue updated_scores
-  in
-
-  let initial_pos = {x=0; y=0} in
-  let pqeue = StateQueue.empty in
-  let scores = Scores.empty in
-  tokens 
-    (StateQueue.insert {pos = initial_pos; tokens = 0} pqeue) 
-    (Scores.add initial_pos 0 scores)
-
-let min_token machine =
-  let prize_pos : pos = {x = machine.prize.x; y = machine.prize.y} in
-  Scores.find_opt prize_pos (tokens machine)
-
-let fewest_tokens (machines : claw_machine list) =
-  List.fold_left
-    (fun tokens machine -> 
-      tokens + match min_token machine with
-      | Some (t) -> t
-      | None -> 0
-    )
-    0
-    machines
-
-
 type linear_equation_system = {
   a1 : int;
   b1 : int; 
@@ -207,6 +101,13 @@ let solve (eq: linear_equation_system) =
     else 
       None 
   else
+    (*
+    * Otherwise, we would have to solve a Diophantine equation 
+    * in N² (and find the best solution among all the tuples),
+    * but for some reason, the directions of the buttons are 
+    * never parallel; so solving the problem in R² seems to be 
+    * enough… and it’s blazingly fast.
+    *)
     failwith("diophantine not implemented")
 
 
@@ -223,28 +124,28 @@ let parse_eq (machine: claw_machine) =
   }
 
 let nb_tokens machines = 
-  List.fold_left
-    (fun tokens machine -> tokens +
-      match solve (parse_eq machine) with
-        | Some (x, y) -> x * 3 + y
-        | None -> 0
-    )
-    0
-    machines
-
-let part1 (input: string) =
-  let machines = parse_machines input in
-  nb_tokens machines
-
+  (*adapt data model to equation model*)
+  machines 
+    |> List.map parse_eq
+    |> List.fold_left
+        (fun tokens eq -> tokens +
+          match solve eq with
+            | Some (x, y) -> x * 3 + y
+            | None -> 0)
+        0
+  
 let update_prize (machine : claw_machine) =
   let prize = machine.prize in
   let updated_prize: prize = {x = prize.x + 10000000000000; y = prize.y + 10000000000000} in
   {machine with prize = updated_prize}
+
+let part1 (input: string) =
+  let machines = parse_machines input in
+  nb_tokens machines
 
 let part2 (input: string) =
   let machines = input
     |> parse_machines
     |> List.map update_prize
   in
-  
   nb_tokens machines
