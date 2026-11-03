@@ -31,3 +31,8 @@ let get_lines (input: string) =
 (* read the entire file *)
 let read_file file =
   In_channel.with_open_bin file In_channel.input_all
+
+let save_string filename content =
+  let channel = open_out filename in
+  output_string channel content;
+  close_out channel
