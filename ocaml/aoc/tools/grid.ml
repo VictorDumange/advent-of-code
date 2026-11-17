@@ -83,3 +83,7 @@ let get_line i j d length grid =
     invalid_arg "Grid.get_line: negative length"
   else
     collect 0 []
+
+let is_inside i j grid =
+  (i >= 0 && i < grid.rows) &&
+  (j >= 0 && j < grid.cols)

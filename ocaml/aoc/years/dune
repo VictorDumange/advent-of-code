@@ -1,2 +1,3 @@
 (library
- (name aoc_years))
+ (name aoc_years)
+ (libraries tools))

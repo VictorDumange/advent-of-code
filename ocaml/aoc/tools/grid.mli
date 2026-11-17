@@ -10,6 +10,7 @@ val make : int -> int -> 'a -> 'a t
 val rows : 'a t -> int
 val cols : 'a t -> int
 
+val is_inside : int -> int -> 'a t -> bool
 val get : int -> int -> 'a t -> 'a
 val set : int -> int -> 'a -> 'a t -> unit
 

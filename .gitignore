@@ -36,3 +36,7 @@ Makefile
 # Windows system files
 Thumbs.db
 desktop.ini
+
+# OCaml / dune
+_build/
+output/

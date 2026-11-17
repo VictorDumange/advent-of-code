@@ -1,33 +1,9 @@
+
 module type NODE = sig
   type t
   val compare : t -> t -> int
 end
 
-module FQueue = struct
-  type 'a t = {
-    front : 'a list;
-    back : 'a list;
-  }
-
-  let empty = { front = []; back = [] }
-
-  let is_empty q =
-    q.front = [] && q.back = []
-
-  let enqueue x q =
-    { q with back = x :: q.back }
-
-  let normalize q =
-    match q.front with
-    | [] -> { front = List.rev q.back; back = [] }
-    | _ -> q
-
-  let dequeue q =
-    let q = normalize q in
-    match q.front with
-    | [] -> None
-    | x :: xs -> Some (x, { q with front = xs })
-end
 
 module Make (Node : NODE) = struct
   module NodeSet = Set.Make (Node)
@@ -90,23 +66,23 @@ module Make (Node : NODE) = struct
     let queue =
       NodeMap.fold
         (fun node degree acc ->
-          if degree = 0 then FQueue.enqueue node acc
+          if degree = 0 then Fqueue.enqueue node acc
           else acc)
         in_degrees
-        FQueue.empty
+        Fqueue.empty
     in
 
     let update in_deg q node =
       let updated_deg = NodeMap.find node in_deg - 1 in
       let updated_deg_map = NodeMap.add node updated_deg in_deg in
       if updated_deg = 0 then
-        (updated_deg_map, FQueue.enqueue node q)
+        (updated_deg_map, Fqueue.enqueue node q)
       else
         (updated_deg_map, q)
     in
 
     let rec kahn queue xs deg =
-      match FQueue.dequeue queue with
+      match Fqueue.dequeue queue with
       | None -> List.rev xs
       | Some (node, dequeued) ->
           let updated_xs = node :: xs in
