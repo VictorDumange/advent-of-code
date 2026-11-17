@@ -1,26 +1,59 @@
-# 🎄 Advent of Code — C++ Solutions and Toolbox
+# Advent of Code — a functional approach
 
-This repository is my personal journey through [Advent of Code](https://adventofcode.com/) puzzles using **modern C++ (C++23)**. My goal is not only to solve the problems but to **build a reusable algorithmic toolbox** that explores and demonstrates:
+Reading *Structure and Interpretation of Computer Programs* made me want to explore how
+different languages let you solve problems with a functional approach. This repository is
+that exploration: [Advent of Code](https://adventofcode.com/) puzzles solved in **OCaml**,
+**Clojure** and **C++**.
 
-- Generic programming using **templates** and **concepts**
-- Idiomatic use of the **STL**, including **ranges**, **views**, and **spans**
-- The C++ philosophy of **zero-cost abstractions**
-- Functional patterns like **ad-hoc polymorphism** and **typeclass-like traits**
-- How to structure a small yet powerful **reusable library** in modern C++
+The goal is not only to solve each puzzle, but to see how far small, composable building
+blocks can go: pure functions, immutable and persistent data structures, and a reusable
+toolbox per language that grows from one puzzle to the next.
 
-Could use other programming languages in the future.
----
+## Languages
 
-## 🗂️ Project Structure
+| Language | Puzzles | Highlights |
+|---|---|---|
+| [OCaml](ocaml/aoc) | 2024 | Modules and functors, `.mli` signatures, persistent data structures |
+| [Clojure](clojure) | 2025 | Sequence transformations, immutable maps and sets, tested toolbox |
+| [C++](cpp) | 2015–2024 | Functional style with ranges, views and concepts |
+
+## OCaml
+
+Built with [dune](https://dune.build/). Each day is a module exposing `part1` and `part2`,
+built on top of a small toolbox:
+
+- `Pqueue` — persistent min-priority queue (leftist heap), used for Dijkstra-like searches
+- `Fqueue` — persistent FIFO queue (two lists), used for breadth-first searches
+- `Graph` — graph functor, generic over the node type
+- `Grid` — 2D grid parsing and navigation
+- `Parsing`, `Number`, `Algebra` — input parsing and arithmetic helpers
 
 ```bash
-cpp/
-├── toolbox/             # Reusable, generic algorithms and utilities
-│   ├── algorithms/      # Primality, sorting, shortest paths, etc.
-│   ├── parsing/         # Tokenization, line/group parsing, extractors
-│   ├── util/            # Traits, range utilities, span helpers
-│   └── toolbox.hpp      # Entry point header for the toolbox
-├── 2022/                # AoC solutions by year
-├── 2023/
-├── 2024/
-└── CMakeLists.txt       # Modular build setup
+cd ocaml/aoc
+dune build
+dune test
+```
+
+## Clojure
+
+Solutions live in `src/year2025`, the reusable toolbox in `src/toolbox`: bit manipulation,
+disjoint-set union, graphs, grids, intervals, parsing and tables, with tests in `test/toolbox`.
+
+## Repository structure
+
+```
+ocaml/aoc/
+├── tools/        # Reusable toolbox (Pqueue, Fqueue, Graph, Grid, ...)
+└── years/2024/   # One module per day
+clojure/
+├── src/toolbox/  # Reusable toolbox
+├── src/year2025/ # One namespace per day
+└── test/         # Toolbox tests
+cpp/              # C++ solutions
+```
+
+## Inputs
+
+Puzzle inputs are not committed, as requested by Advent of Code. To run a solution, place
+your own input in an `input/` folder next to the sources (for OCaml:
+`ocaml/aoc/input/<year>/dayXX.txt`).
