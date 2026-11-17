@@ -106,6 +106,9 @@ let is_obstructed pos grid =
 let is_end pos grid =
   (Grid.get pos.x pos.y grid) == 'E'
 
+let is_start pos grid =
+  (Grid.get pos.x pos.y grid) == 'S'
+
 let next_states (current_state : state) grid =
   let translated_location = Location.translate current_state.loc in
   if (is_obstructed translated_location.pos grid) then
@@ -116,51 +119,114 @@ let next_states (current_state : state) grid =
 
 
 module LocMap = Map.Make (Location)
+module LocSet = Set.Make (Location)
+module PosSet = Set.Make (Pos)
 
-let rec minimum_score grid (pqueue : StatePQueue.t) (scores : int LocMap.t) =
+(* previous should be loc -> Set<Loc>
+* if the neighbor location is already visited by a location with the same cost
+  add current_loc to previouses of neighbor, however don't put in the pqueue
+*)
+let rec minimum_score grid (pqueue : StatePQueue.t) (scores : int LocMap.t) (previous : location list LocMap.t) =
   let mb_current_state = StatePQueue.find_min pqueue in
   match mb_current_state with 
-    | None -> scores
+    | None -> (scores, previous)
     | Some (current_state) ->
       let dequeued = StatePQueue.remove_min pqueue in
+      (* stale entry: a better score was found for this location after it was queued *)
+      if current_state.score > LocMap.find current_state.loc scores then
+        minimum_score grid dequeued scores previous
+      else
       let available_states = next_states current_state grid in
-      let updated_pqeue, updated_scores = List.fold_left
-        (fun (pq, sc) st -> match LocMap.find_opt st.loc sc with
-          | None -> (StatePQueue.insert st pq, LocMap.add st.loc st.score sc)
+      let updated_pqeue, updated_scores, updated_previous = List.fold_left
+        (fun (pq, sc, p) st -> match LocMap.find_opt st.loc sc with
+          | None -> (
+            StatePQueue.insert st pq, 
+            LocMap.add st.loc st.score sc, 
+            LocMap.add st.loc [current_state.loc] p)
           | Some (score) -> 
-            if (st.score >= score) then
-              (pq, sc)
+            if (st.score > score) then
+              (pq, sc, p)
+            else if (st.score = score) then
+              (pq, sc, LocMap.add st.loc (current_state.loc :: LocMap.find st.loc p) p)
             else 
-              (StatePQueue.insert st pq, LocMap.add st.loc st.score sc))
-        (dequeued, scores)
-        available_states in
-      minimum_score grid updated_pqeue updated_scores
+              (StatePQueue.insert st pq,
+              LocMap.add st.loc st.score sc, 
+              LocMap.add st.loc [current_state.loc] p))
+        (dequeued, scores, previous)
+        available_states 
+      in
+      minimum_score grid updated_pqeue updated_scores updated_previous
 
 let intial_state grid =
   let st = find grid 'S' in
   let init_loc = {pos = st; dir = E} in
   {loc = init_loc ; score = 0}
 
-let part1 (input : string) =
-  let grid = Grid.parse input Fun.id in
-
+let minimum_score grid = 
   let intial_state = intial_state grid in
   let pqueue = StatePQueue.empty in
 
-  let scores = minimum_score 
+  minimum_score 
     grid 
     (StatePQueue.insert intial_state pqueue) 
-    (LocMap.add intial_state.loc 0 LocMap.empty) 
+    (LocMap.add intial_state.loc 0 LocMap.empty)
+    LocMap.empty 
+
+let reconstruct_best_path grid (scores : int LocMap.t) (previous : location list LocMap.t) =
+  let end_pos = find grid 'E' in
+
+  let sorted_end_dir = [N; E; S; W]
+    |> List.filter (fun dir -> LocMap.mem {pos = end_pos; dir} scores)
+    |> List.sort (fun d1 d2 -> 
+      Int.compare 
+        (LocMap.find {pos = end_pos; dir = d1} scores)
+        (LocMap.find {pos = end_pos; dir = d2} scores))
   in
+
+  let best_end_dir = List.filter 
+    (fun d ->
+       (LocMap.find {pos = end_pos; dir = d} scores) = 
+       (LocMap.find {pos = end_pos; dir = List.hd sorted_end_dir} scores)
+    )
+    sorted_end_dir
+
+  in
+
+  let rec aux loc ((visited, tiles) : LocSet.t * PosSet.t) =
+    if LocSet.mem loc visited then (visited, tiles)
+    else
+      let visited = LocSet.add loc visited in
+      let tiles = PosSet.add loc.pos tiles in
+      (* the initial state is the only one without previous locations *)
+      match LocMap.find_opt loc previous with
+        | None -> (visited, tiles)
+        | Some previous_locs ->
+          List.fold_left
+            (fun acc p_loc -> aux p_loc acc)
+            (visited, tiles)
+            previous_locs
+  in
+
+  let _, tiles = List.fold_left
+    (fun acc d -> aux {pos = end_pos; dir = d} acc)
+    (LocSet.empty, PosSet.empty)
+    best_end_dir
+  in
+  tiles
+
+let part1 (input : string) =
+  let grid = Grid.parse input Fun.id in
+  let scores, _ = minimum_score grid in
 
   let end_pos = find grid 'E' in
   [N; E; S; W]
-  |> List.filter_map (fun dir -> LocMap.find_opt {pos = end_pos; dir} scores)
-  |> List.fold_left min max_int
+    |> List.filter_map (fun dir -> LocMap.find_opt {pos = end_pos; dir} scores)
+    |> List.fold_left min max_int
 
+let part2 (input: string) =
+  let grid = Grid.parse input Fun.id in
+  let scores, previous = minimum_score grid in
 
+  let tiles = reconstruct_best_path grid scores previous in
 
-(*state = dir + ^pos*)
-(*dijskra is priority q*)
-(*available state : *)
-(* for each available state, if visited*)
+  PosSet.cardinal tiles
