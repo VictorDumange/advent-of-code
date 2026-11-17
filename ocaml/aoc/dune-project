@@ -5,22 +5,17 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github VictorDumange/advent-of-code))
 
-(authors "Author Name <author@example.com>")
+(authors "Victor Dumange")
 
-(maintainers "Maintainer Name <maintainer@example.com>")
-
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(maintainers "Victor Dumange")
 
 (package
  (name aoc)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml)
+ (synopsis "Advent of Code solutions in OCaml")
+ (description
+  "Advent of Code puzzles solved in a functional style, on top of a small toolbox of persistent data structures and generic modules.")
+ (depends ocaml dune)
  (tags
-  ("add topics" "to describe" your project)))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/reference/dune-project/index.html
+  ("advent-of-code" "functional-programming")))
